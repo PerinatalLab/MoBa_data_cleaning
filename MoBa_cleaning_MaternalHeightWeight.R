@@ -252,7 +252,8 @@ fun_bmi = function(weight,height,thrL,thrR) {
 
 ########################
 ########################
-### first round of cleaning: handwritings and OCR problems
+
+### first round of cleaning: hand-writing and OCR problems
 # play with constants
 w1 = fun_weightCuration(weight=q1$AA85,low=30,upp=200,thr=3,xlim=NA)
 w2 = fun_weightCuration(weight=q1$AA86,low=30,upp=200,thr=3,xlim=NA)
@@ -271,13 +272,14 @@ q1$AA87 = h1$height
 ########################
 ########################
 
-# perform various cleaning steps
+# second round of cleaning (various cleaning steps)
 w1w2_1 = fun_weightVSweight(q1$AA85,q1$AA86,30,-30); table(w1w2$flag)
 w1h1_1 = fun_weightVSheight(q1$AA85,q1$AA87,4,5); table(w1h1$flag)
 w2h1_1 = fun_weightVSheight(q1$AA86,q1$AA87,4,5); table(w2h1$flag)
 bm1_1 = fun_bmi(q1$AA85,q1$AA87,thrL=4,thrR=5); table(bm1$flag)
 bm2_1 = fun_bmi(q1$AA86,q1$AA87,thrL=4,thrR=5); table(bm2$flag)        
 
+# delete appropriate values
 q1$AA85[which(w1w2$flag=="deleted")]=NA
 q1$AA85[which(w1h1$flag=="deleted")]=NA
 q1$AA85[which(bm1$flag=="deleted")]=NA
@@ -288,7 +290,6 @@ q1$AA87[which(w1h1$flag=="deleted")]=NA
 q1$AA87[which(w2h1$flag=="deleted")]=NA
 q1$AA87[which(bm1$flag=="deleted")]=NA
 q1$AA87[which(bm2$flag=="deleted")]=NA
-
 
 
 ########################
@@ -342,6 +343,7 @@ fun_min = function(x) {
 }
 
 
+# find extreme (max min) values for the same mother except for the current pregnancy
 prgid = Q1$PREG_ID
 h1mxs = as.numeric(apply(rez[,c( 1:10,31)],1,fun_max))
 h1mns = as.numeric(apply(rez[,c( 1:10,31)],1,fun_min))
@@ -352,7 +354,8 @@ w2mns = as.numeric(apply(rez[,c(21:30,31)],1,fun_min))
 
 
 
-# delete, every time a value differs by more than X units from other preg values
+# delete only if a value differs from extreme values..
+# ..in other pregnancies of the same mother by more than X units
 h1tst = w1tst = w2tst = NULL
 for (i in 1:nrow(q1)) {
         print(paste(i,nrow(q1),sep=" / "))
@@ -374,7 +377,7 @@ table(w1tst)
 table(w2tst)
 
 
-# perform various cleaning steps
+# third cleaning (repeated various cleaning steps)
 w1w2_2 = fun_weightVSweight(q1$AA85,q1$AA86,30,-30); table(w1w2_2$flag)
 w1h1_2 = fun_weightVSheight(q1$AA85,q1$AA87,4,5); table(w1h1_2$flag)
 w2h1_2 = fun_weightVSheight(q1$AA86,q1$AA87,4,5); table(w2h1_2$flag)
@@ -403,11 +406,9 @@ points(AA86~AA87,data = q1[which(h1tst),],pch=19,col="black",cex = 0.7)
 points(AA86~AA87,data = q1[which(w2tst),],pch=19,col="red",cex = 0.7)
 
 
-###  actual cleaning
+###  final cleaning
 
-                
-                  
-
+           
 out = data.frame(bm1_1=(bm1_1$flag=="deleted"),bm2_1=(bm2_1$flag=="deleted"),
                  w1w2_1=(w1w2_1$flag=="deleted"),w1h1_1=(w1h1_1$flag=="deleted"),
                  w2h1_1=(w2h1_1$flag=="deleted"),
@@ -418,7 +419,7 @@ out = data.frame(bm1_1=(bm1_1$flag=="deleted"),bm2_1=(bm2_1$flag=="deleted"),
 head(out)
 
 
-# height deletion
+# vectors that decide what should be deleted
 fun_sum = function(x) sum(x,na.rm=T)
 h1t = apply(out[,c(1,2,4,5, 6,7,9,10, 11)],1,fun_sum)
 w1t = apply(out[,c(1,3,4,   6,8,9,    12)],1,fun_sum)
@@ -429,19 +430,19 @@ sum(is.na(q1$AA85))
 sum(is.na(q1$AA86))
 sum(is.na(q1$AA87))
 
+# delete values
 q1$AA85[which(w1t>0)]=NA
 q1$AA86[which(w2t>0)]=NA
 q1$AA87[which(h1t>0)]=NA
 
+# missing
 sum(is.na(q1$AA85))
 sum(is.na(q1$AA86))
 sum(is.na(q1$AA87))
 
-
 sum( (is.na(q1$AA85))|(is.na(q1$AA87)))
 sum( (!is.na(q1$AA85))&(!is.na(q1$AA87)))
 
-head(q1)
 
 
 
