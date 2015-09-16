@@ -1,6 +1,7 @@
 
-
-#  cleaning height and weight variables for project PDB1555
+#  cleaning height and weight variables for MoBa projects
+# by Jonas B.
+# 2015 09 16
 
 # phenotypes (height and weight)
 q1=read.csv("~/Biostuff/MOBA_1555_CLEANING/PDB1555_Skjema1_v8.csv",h=T,sep=";",stringsAsFactors=F)
