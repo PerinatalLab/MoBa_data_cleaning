@@ -7,7 +7,7 @@
 # load the phenotypes (height and weight)
 #  1) note! this script expects first column name to be Preg_ID
 #  2) note! this script expects other columns to be "AA85" "AA86" "AA87"
-q1=read.csv("~/Biostuff/MOBA_1555_CLEANING/PDB1555_Skjema1_v8.csv",h=T,sep=";",stringsAsFactors=F)
+q1=read.csv("~/Biostuff/MOBA_1581_CLEANING/PDB1581_Skjema1_v8.csv",h=T,sep=";",stringsAsFactors=F)
 colnames(q1)[1]="PREG_ID"
 head(q1); dim(q1)
 
@@ -17,7 +17,7 @@ q1_backup = q1
 
 # load maternal ID and PregID data
 # note! this script expects first column to be Preg_ID and second column - MaternalID
-svi = read.csv("~/Biostuff/MOBA_1555_CLEANING/PDB1555_SV_INFO_v8.csv",h=T,";",stringsAsFactors=F)
+svi = read.csv("~/Biostuff/MOBA_1581_CLEANING/PDB1581_SV_INFO_v8.csv",h=T,sep=";",stringsAsFactors=F)
 colnames(svi) = c("PREG_ID","M_ID")
 head(svi); dim(svi)
 
@@ -505,8 +505,8 @@ hash = system(paste("git log --pretty=format:'%h' -n 1"),intern=TRUE)
 suffix = paste(date_stamp,time_stamp,hash,sep="_")
 
 
-file_dir = "~/Biostuff/MOBA_1555_CLEANING/"
-file_name = paste(file_dir,"MOBA_PDB1555_CLEANED_maternalHgh1Wgh1Wgh2_",suffix,".txt",sep="")
+file_dir = "~/Biostuff/MOBA_1581_CLEANING/"
+file_name = paste(file_dir,"MOBA_PDB1581_CLEANED_maternalHgh1Wgh1Wgh2_",suffix,".txt",sep="")
 write.table(output_obj,file_name,row.names=F,col.names=T,sep="\t",quote=F)
 
 
