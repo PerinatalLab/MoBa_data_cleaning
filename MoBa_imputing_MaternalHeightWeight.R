@@ -19,15 +19,25 @@ file_dir = "~/Desktop/MoBa_v6/"
 file_out = paste(file_dir,"MOBA_PDB1581_IMPUTED_maternalHgh1Wgh1Wgh2_",date_stamp,"_",hash,".txt",sep="")
 
 ## this file contains the cleaned and corrected mother height/weight info
-M=read.csv(paste(file_dir,"MOBA_PDB1581_CLEANED_maternalHgh1Wgh1Wgh2_",date_stamp,"_",hash,".txt",sep=""),
+q1=read.csv(paste(file_dir,"MOBA_PDB1581_CLEANED_maternalHgh1Wgh1Wgh2_",date_stamp,"_",hash,".txt",sep=""),
             sep="\t", header=T)
-names(M)=c("PREG_ID","WEIGHT","WEIGHT_1stT","HEIGHT","flAA85","flAA86","flAA87")
-head(M); dim(M)
+names(q1)=c("PREG_ID","WEIGHT","WEIGHT_1stT","HEIGHT","flAA85","flAA86","flAA87")
+head(q1); dim(q1)
 
 ## this file contains energy info retrieved directly from MoBa without any changes
 en=read.csv(paste(file_dir,"output_q2_kilojoules.csv",sep=""), sep=",", header=T)
 names(en)=c("PREG_ID","KJ")
 head(en); dim(en)
+
+## this file is required only for the mother age info (also taken directly from MoBa)
+mfr=read.csv(paste(file_dir,"output_mfr_basicfetalinfo.csv",sep=""),sep=",",header=F)
+names(mfr)=c("PREG_ID","CHILDNUM","AGE","GA","SEX","BIRTHWEIGHT","PARITY")
+head(mfr); dim(mfr)
+
+## merge the age with mother info
+library(sqldf)
+M=sqldf("SELECT DISTINCT mfr.AGE, q1.* FROM q1 LEFT JOIN mfr ON mfr.PREG_ID=q1.PREG_ID")
+head(M); dim(M)
 
 #####################################################################
 # Fistly we checked the weight and height of mothers
@@ -44,7 +54,6 @@ S=S[right,]
 meddif=median(S$dif)  
 
 ## attach the weight difference while removing duplicates
-library(sqldf)
 en=sqldf("SELECT DISTINCT en.*, WEIGHT_1stT-WEIGHT as DIF FROM en LEFT JOIN S on S.PREG_ID=en.PREG_ID")
 
 ## set the upper and lower energy intake caps
