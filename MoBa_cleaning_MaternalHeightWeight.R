@@ -24,7 +24,8 @@ head(svi); dim(svi)
 ## get the date stamp
 date_stamp = paste(unlist(strsplit(substr(Sys.time(),1,10),"-")),collapse="")
 ## get the hash of the current state of the Git folder
-hash = system(paste("git log --pretty=format:'%h' -n 1"),intern=TRUE)
+setwd("~/Documents/gitrep/MoBa_data_cleaning")
+hash = system("git log --pretty=format:'%h' -n 1",intern=TRUE)
 
 file_dir = "~/Desktop/MoBa_v6/"
 file_name = paste(file_dir,"MOBA_PDB1581_CLEANED_maternalHgh1Wgh1Wgh2_",date_stamp,"_",hash,".txt",sep="")
