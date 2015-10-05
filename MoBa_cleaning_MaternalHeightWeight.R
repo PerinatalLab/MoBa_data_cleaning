@@ -1,31 +1,38 @@
-
 # a script for cleaning height and weight variables in MoBa projects
 # by Jonas Bacelis
 # 2015 09 16
 
+options(stringsAsFactors=F)
 
-# load the phenotypes (height and weight)
-#  1) note! this script expects first column name to be Preg_ID
-#  2) note! this script expects other columns to be "AA85" "AA86" "AA87"
-q1=read.csv("~/Biostuff/MOBA_1581_CLEANING/PDB1581_Skjema1_v8.csv",h=T,sep=";",stringsAsFactors=F)
-colnames(q1)[1]="PREG_ID"
+# load the phenotypes (height and weight) taken directly from MoBa
+#### NOTE THE COLUMNS REQUIRED FOR THE INPUT CSV FILE
+q1=read.csv("~/Desktop/MoBa_v6/output_q1a_basicsizeinfo.csv",h=F,sep=",")
+names(q1)=c("PREG_ID","AA85","AA86","AA87")
 head(q1); dim(q1)
 
 # save a primal state for describing all changes in the end
 q1_backup = q1
 
-
 # load maternal ID and PregID data
-# note! this script expects first column to be Preg_ID and second column - MaternalID
-svi = read.csv("~/Biostuff/MOBA_1581_CLEANING/PDB1581_SV_INFO_v8.csv",h=T,sep=";",stringsAsFactors=F)
-colnames(svi) = c("PREG_ID","M_ID")
+#### NOTE THE COLUMNS REQUIRED FOR THE INPUT CSV FILE
+svi = read.csv("~/Desktop/MoBa_v5/SV_INFO_converted.csv",h=F,",",stringsAsFactors=F)
+colnames(svi) = c("PREG_ID","M_ID","YEAR")
 head(svi); dim(svi)
+
+# set output file and folder
+
+## get the date stamp
+date_stamp = paste(unlist(strsplit(substr(Sys.time(),1,10),"-")),collapse="")
+## get the hash of the current state of the Git folder
+hash = system(paste("git log --pretty=format:'%h' -n 1"),intern=TRUE)
+
+file_dir = "~/Desktop/MoBa_v6/"
+file_name = paste(file_dir,"MOBA_PDB1581_CLEANED_maternalHgh1Wgh1Wgh2_",date_stamp,"_",hash,".txt",sep="")
 
 
 # check! there should be no twin pregnancies in Q1 and SVI file
 sum(duplicated(q1$PREG_ID))
 sum(duplicated(svi$PREG_ID))
-
 
 # define the function of plotting large quantities of values values
 library(hexbin)
@@ -56,7 +63,8 @@ fun_heightCuration = function(height,low,upp,thr) {
         
         abline(v=c(mdn-thr*sdl,mdn+thr*sdr))
         # what fraction of individuals falls outside the thresholds?
-        sum((tmp>(mdn-thr*sdl))&(tmp<(mdn+thr*sdr)),na.rm=T) / sum(!is.na(tmp))
+        print("fraction of samples inside thresholds:")
+        print(sum((tmp>(mdn-thr*sdl))&(tmp<(mdn+thr*sdr)),na.rm=T) / sum(!is.na(tmp)))
         
         # saving private Ryan ("1" was lost at the front)
         left_lim = floor(mdn - thr*sdl - 100)
@@ -78,7 +86,7 @@ fun_heightCuration = function(height,low,upp,thr) {
         points(height[bad2],rep(max(rep(h$counts))*.4,length(bad2)))
         # fix what is fixable
         height[bad1]=height[bad1]+100
-        height[bad2]=height[bad2]*10+5
+        height[bad2]=height[bad2]*10+5 ## no reason to add exactly 5
         flags[bad1]="changed" # best-guess curation
         flags[bad2]="changed" # best-guess curation
         
@@ -114,7 +122,8 @@ fun_weightCuration = function(weight,low,upp,thr,xlim) {
         
         abline(v=c(mdn-thr*sdl,mdn+thr*sdr))
         # what fraction of individuals falls outside the thresholds?
-        sum((tmp>(mdn-thr*sdl))&(tmp<(mdn+thr*sdr)),na.rm=T) / sum(!is.na(tmp))
+        print("fraction of samples inside thresholds:")
+        print(sum((tmp>(mdn-thr*sdl))&(tmp<(mdn+thr*sdr)),na.rm=T) / sum(!is.na(tmp)))
         
         # lost last digit
         left_lim = floor( (mdn - thr*sdl)/10)
@@ -134,7 +143,7 @@ fun_weightCuration = function(weight,low,upp,thr,xlim) {
         points(weight[bad1],rep(max(rep(h$counts))*.4,length(bad1)))
         points(weight[bad2],rep(max(rep(h$counts))*.4,length(bad2)))
         # fix what is fixable
-        weight[bad1]=weight[bad1]*10+5
+        weight[bad1]=weight[bad1]*10+5 ### no reason to add +5, but whatever
         weight[bad2]=weight[bad2]/10
         flags[bad1]="changed" # best-guess curation
         flags[bad2]="changed" # best-guess curation
@@ -292,11 +301,11 @@ bm2_1 = fun_bmi(q1$AA86,q1$AA87,thrL=4,thrR=5); table(bm2_1$flag)
 
 # preview selected deletions in one plot:
 fun_plot(q1$AA87,q1$AA85,100,"height","weight")
-points(AA85~AA87,data = q1[which(bm1_1$flag=="deleted"),],pch=19,col="green")
-points(AA85~AA87,data = q1[which(bm2_1$flag=="deleted"),],pch=19,col="grey")
-points(AA85~AA87,data = q1[which(w1w2_1$flag=="deleted"),],pch=19,col="blue")
-points(AA85~AA87,data = q1[which(w1h1_1$flag=="deleted"),],pch=19,col="red")
-points(AA85~AA87,data = q1[which(w2h1_1$flag=="deleted"),],pch=19,col="turquoise")
+points(AA85~AA87,data = q1[which(bm1_1$flag=="deleted"),],pch=19,col="green",cex=1.2)
+points(AA85~AA87,data = q1[which(bm2_1$flag=="deleted"),],pch=3,col="black")
+points(AA85~AA87,data = q1[which(w1w2_1$flag=="deleted"),],pch=19,col="blue",cex=0.8)
+points(AA85~AA87,data = q1[which(w1h1_1$flag=="deleted"),],pch=19,col="red",cex=0.6)
+points(AA85~AA87,data = q1[which(w2h1_1$flag=="deleted"),],pch=1,col="black",cex=2)
 
 fun_plot(q1$AA87,q1$AA86,100,"height","weight (preg)")
 points(AA86~AA87,data = q1[which(bm1_1$flag=="deleted"),],pch=19,col="green",cex=1.2)
@@ -322,129 +331,154 @@ q1$AA87[which(bm2_1$flag=="deleted")]=NA
 ########################
 ########################
 ########################
+library(sqldf)
+q1m=sqldf("SELECT q1.PREG_ID as PREG_ID, M_ID, AA85, AA86, AA87 FROM q1 INNER JOIN svi ON q1.PREG_ID=svi.PREG_ID")
+
+## this stage will remove the smallest (largest) value of measurements per each mother,
+## if it differs from the second smallest (largest) value for the same mother
+## by an amount greater than the thresholds set here
+e85=20
+e86=20
+e87=5
+
+## select second largest value for every mother
+secondMax85=sqldf("SELECT M_ID, max(AA85) AS m FROM q1m
+        WHERE PREG_ID NOT IN ( SELECT PREG_ID FROM q1m
+                INNER JOIN (
+                        SELECT M_ID, max(AA85) as m FROM q1m GROUP BY M_ID
+                ) t2 
+                ON q1m.AA85=t2.m AND q1m.M_ID=t2.M_ID
+          ) GROUP BY M_ID")
+secondMax86=sqldf("SELECT M_ID, max(AA86) AS m FROM q1m
+        WHERE PREG_ID NOT IN ( SELECT PREG_ID FROM q1m
+                  INNER JOIN (
+                  SELECT M_ID, max(AA86) as m FROM q1m GROUP BY M_ID
+                  ) t2 
+                  ON q1m.AA86=t2.m AND q1m.M_ID=t2.M_ID
+        ) GROUP BY M_ID")
+secondMax87=sqldf("SELECT M_ID, max(AA87) AS m FROM q1m
+                  WHERE PREG_ID NOT IN ( SELECT PREG_ID FROM q1m
+                  INNER JOIN (
+                  SELECT M_ID, max(AA87) as m FROM q1m GROUP BY M_ID
+                  ) t2 
+                  ON q1m.AA87=t2.m AND q1m.M_ID=t2.M_ID
+          ) GROUP BY M_ID")
+
+## select second smallest value for every mother
+secondMin85=sqldf("SELECT M_ID, min(AA85) AS m FROM q1m
+        WHERE PREG_ID NOT IN ( SELECT PREG_ID FROM q1m
+                INNER JOIN (
+                        SELECT M_ID, min(AA85) as m FROM q1m GROUP BY M_ID
+                ) t2 
+                ON q1m.AA85=t2.m AND q1m.M_ID=t2.M_ID
+          ) GROUP BY M_ID")
+secondMin86=sqldf("SELECT M_ID, min(AA86) AS m FROM q1m
+        WHERE PREG_ID NOT IN ( SELECT PREG_ID FROM q1m
+                  INNER JOIN (
+                  SELECT M_ID, min(AA86) as m FROM q1m GROUP BY M_ID
+                  ) t2 
+                  ON q1m.AA86=t2.m AND q1m.M_ID=t2.M_ID
+        ) GROUP BY M_ID")
+secondMin87=sqldf("SELECT M_ID, min(AA87) AS m FROM q1m
+                  WHERE PREG_ID NOT IN ( SELECT PREG_ID FROM q1m
+                  INNER JOIN (
+                  SELECT M_ID, min(AA87) as m FROM q1m GROUP BY M_ID
+                  ) t2 
+                  ON q1m.AA87=t2.m AND q1m.M_ID=t2.M_ID
+          ) GROUP BY M_ID")
+
+## retrieves pregIDs where value is above second largest + a threshold
+## or where value is below second smallest - a threshold
+remove85=sqldf(paste("SELECT q1m.PREG_ID FROM q1m
+        INNER JOIN secondMin85 min ON q1m.M_ID=min.M_ID
+        INNER JOIN secondMax85 max ON q1m.M_ID=max.M_ID
+        WHERE AA85 > max.m +",e85,"OR AA85 < min.m -",e85))
+remove86=sqldf(paste("SELECT q1m.PREG_ID FROM q1m
+        INNER JOIN secondMin86 min ON q1m.M_ID=min.M_ID
+        INNER JOIN secondMax86 max ON q1m.M_ID=max.M_ID
+        WHERE AA86 > max.m +",e86,"OR AA86 < min.m -",e86))
+remove87=sqldf(paste("SELECT q1m.PREG_ID FROM q1m
+        INNER JOIN secondMin87 min ON q1m.M_ID=min.M_ID
+        INNER JOIN secondMax87 max ON q1m.M_ID=max.M_ID
+        WHERE AA87 > max.m +",e87,"OR AA87 < min.m -",e87))
+
+### this query can generate a table useful for reports
+#sqldf(paste("SELECT q1m.*, min.m as SecondMin, max.m as SecondMax FROM q1m
+#        INNER JOIN secondMin87 min ON q1m.M_ID=min.M_ID
+#        INNER JOIN secondMax87 max ON q1m.M_ID=max.M_ID
+#        WHERE AA87 > max.m +",e87,"OR AA87 < min.m - ",e87))
+
+## set the detected outliers as missing
+q1m[which(q1m$PREG_ID %in% remove85$PREG_ID),"AA85"]=NA
+q1m[which(q1m$PREG_ID %in% remove86$PREG_ID),"AA86"]=NA
+q1m[which(q1m$PREG_ID %in% remove87$PREG_ID),"AA87"]=NA
 
 
+## save the flags in a data frame
+mpflags=data.frame(PREG_ID=q1m$PREG_ID, AA85=c(q1m$PREG_ID %in% remove85$PREG_ID),
+                   AA86=c(q1m$PREG_ID %in% remove86$PREG_ID), AA87=c(q1m$PREG_ID %in% remove87$PREG_ID))
+mpflags[mpflags==FALSE]="original"
+mpflags[mpflags==TRUE]="deleted"
 
-###  find other other pregnancies connected via same mother
-mids = svi[unique(which(duplicated(svi$M_ID))),"M_ID"]
-rixs = which(svi$M_ID %in% mids)
-pids = unique(svi$PREG_ID[rixs])
-Q1 = q1[which(q1$PREG_ID %in% pids),] # smaller dataset to increase the speed
-pids1 = pids[which(pids %in% Q1$PREG_ID)]
-svi = svi[which(svi$PREG_ID %in% pids1),] # reduction of dataset to increase the speed
-col_name1="AA87"; col_name2="AA85"; col_name3="AA86"   # colnames!!! ***   
-rez = NULL
-for (i in 1:nrow(Q1)) {
-        # note that the larger preg id means the later pregnancy (time increases with preg id)
-        print(paste(i,nrow(Q1),sep=" / "))
-        ix = which(svi$PREG_ID==Q1$PREG_ID[i]) # which row contains this pregID
-        mid = svi[ix,"M_ID"] # which mother does it belong
-        ixs = which(svi$M_ID==mid) # where else is this mother mentioned
-        prgids = svi[ixs,"PREG_ID"] # what pregIDs does that mother have
-        rixs = which(Q1$PREG_ID %in% prgids) # which rows contain these pregIDs
-        vals1 = c(Q1[rixs,col_name1],rep(NA,10-length(rixs)))
-        vals2 = c(Q1[rixs,col_name2],rep(NA,10-length(rixs)))
-        vals3 = c(Q1[rixs,col_name3],rep(NA,10-length(rixs)))
-        if ( (length(vals1)>10)|(length(vals2)>10)|(length(vals3)>10)) {
-                warning("found more than 10 pregnancies per one mother")
-        }
-        parit = which(rixs==i)
-        tmp = c(vals1,vals2,vals3,parit)
-        rez = rbind(rez,tmp)
-        rm(ix,mid,ixs,prgids,rixs,tmp,parit)
-}
-head(rez); dim(rez)
+## attach per-mother averages
+imp=sqldf("SELECT * FROM q1m
+        INNER JOIN (SELECT M_ID, AVG(AA85) as a85, AVG(AA86) as a86, AVG(AA87) as a87 FROM q1m GROUP BY M_ID) as avg
+        ON q1m.M_ID=avg.M_ID")
+imp$mp=duplicated(imp$M_ID)
 
+## select mothers with parity=2
+mps=sqldf("SELECT M_ID FROM ( SELECT M_ID,count(M_ID) as c FROM q1m GROUP BY M_ID ) as counts WHERE counts.c=2")
+mps=imp[which(imp$M_ID %in% mps$M_ID),]
+mps=mps[order(mps$M_ID),]
 
+## calculate average difference between parities
+mpst=cbind(mps[seq(1,nrow(mps),2),"M_ID"], mps[seq(1,nrow(mps),2),"AA85"], mps[seq(2,nrow(mps),2),"AA85"])
+mpst=mpst[which(!is.na(mpst[,2]) & !is.na(mpst[,3])),]
+d85=mean(as.numeric(mpst[,2])-as.numeric(mpst[,3]))
+mpst=cbind(mps[seq(1,nrow(mps),2),"M_ID"], mps[seq(1,nrow(mps),2),"AA86"], mps[seq(2,nrow(mps),2),"AA86"])
+mpst=mpst[which(!is.na(mpst[,2]) & !is.na(mpst[,3])),]
+d86=mean(as.numeric(mpst[,2])-as.numeric(mpst[,3]))
+mpst=cbind(mps[seq(1,nrow(mps),2),"M_ID"], mps[seq(1,nrow(mps),2),"AA87"], mps[seq(2,nrow(mps),2),"AA87"])
+mpst=mpst[which(!is.na(mpst[,2]) & !is.na(mpst[,3])),]
+d87=mean(as.numeric(mpst[,2])-as.numeric(mpst[,3]))
 
-# function that find max and min values in the REMAINING pregnancies of the same mother
-fun_max = function(x) {
-        x = x[-c(x[11],11)] # eliminate column representing pregnancy in question
-        ifelse(sum(!is.na(x))>0,max(x,na.rm=T),NA) # report
-}
-fun_min = function(x) {
-        x = x[-c(x[11],11)] # eliminate column representing pregnancy in question
-        ifelse(sum(!is.na(x))>0,min(x,na.rm=T),NA)
-}
+## weight increases by d85 (d86) between pregnancies, which should be taken into account while imputing
+## height increase is negligible
+## weight increase between 2nd and 3rd pregnancies is also observed, but there's few of them
 
+imp$AA85[is.na(imp$AA85)]=round(imp$a85[is.na(imp$AA85)]+d85*(-1)^imp$mp[is.na(imp$AA85)],1)
+imp$AA86[is.na(imp$AA86)]=round(imp$a86[is.na(imp$AA86)]+d86*(-1)^imp$mp[is.na(imp$AA86)],1)
+imp$AA87[is.na(imp$AA87)]=round(imp$a87[is.na(imp$AA87)],0)
 
-# find extreme (max min) values for the same mother except for the current pregnancy
-prgid = Q1$PREG_ID
-h1mxs = as.numeric(apply(rez[,c( 1:10,31)],1,fun_max))
-h1mns = as.numeric(apply(rez[,c( 1:10,31)],1,fun_min))
-w1mxs = as.numeric(apply(rez[,c(11:20,31)],1,fun_max))
-w1mns = as.numeric(apply(rez[,c(11:20,31)],1,fun_min))
-w2mxs = as.numeric(apply(rez[,c(21:30,31)],1,fun_max))
-w2mns = as.numeric(apply(rez[,c(21:30,31)],1,fun_min))
+## successful imputes:
+i85=which(imp$AA85 != q1$AA85)
+i86=which(imp$AA86 != q1$AA86)
+i87=which(imp$AA87 != q1$AA87)
 
-
-# delete only if a value differs from extreme values..
-# ..in other pregnancies of the same mother by more than X units
-h1tst = w1tst = w2tst = NULL
-for (i in 1:nrow(q1)) {  # takes around 1 minute..
-        print(paste(i,nrow(q1),sep=" / "))
-        ix = which(prgid==q1$PREG_ID[i])[1] # [1] = due to duplicates
-        if(length(ix)>0) {
-                h1tst = c(h1tst, (q1$AA87[i] >= h1mxs[ix] + 5)|(q1$AA87[i] <= h1mns[ix] - 5))  # arbitrary! ***
-                w1tst = c(w1tst, (q1$AA85[i] >= w1mxs[ix] + 20)|(q1$AA85[i] <= w1mns[ix] - 20)) # arbitrary! ***
-                w2tst = c(w2tst, (q1$AA86[i] >= w2mxs[ix] + 20)|(q1$AA86[i] <= w2mns[ix] - 20)) # arbitrary! ***
-        } else {
-                h1tst = c(h1tst,NA)
-                w1tst = c(w1tst,NA)
-                w2tst = c(w2tst,NA)
-        }
-} # end of cycling
-
+mpflags[i85,"AA85"]="imputed"
+mpflags[i86,"AA86"]="imputed"
+mpflags[i87,"AA87"]="imputed"
 
 # inspect the flags
-table(h1tst)
-table(w1tst)
-table(w2tst)
+table(mpflags$AA85)
+table(mpflags$AA86)
+table(mpflags$AA87)
 
+q1=imp[,c("PREG_ID","AA85","AA86","AA87")]
 
-# third round of cleaning:  various deletions
-# first, play with constants, view summaries, and when happy - proceed
-w1w2_2 = fun_weightVSweight(q1$AA85,q1$AA86,30,-30); table(w1w2_2$flag)
-w1h1_2 = fun_weightVSheight(q1$AA85,q1$AA87,4,5); table(w1h1_2$flag)
-w2h1_2 = fun_weightVSheight(q1$AA86,q1$AA87,4,5); table(w2h1_2$flag)
-bm1_2 = fun_bmi(q1$AA85,q1$AA87,thrL=4,thrR=5); table(bm1_2$flag)
-bm2_2 = fun_bmi(q1$AA86,q1$AA87,thrL=4,thrR=5); table(bm2_2$flag)        
-
-# preview selected deletions in one plot:
-fun_plot(q1$AA87,q1$AA85,100,"height","weight")
-points(AA85~AA87,data = q1[which(bm1_2$flag=="deleted"),],pch=19,col="green")
-points(AA85~AA87,data = q1[which(bm2_2$flag=="deleted"),],pch=19,col="grey")
-points(AA85~AA87,data = q1[which(w1w2_2$flag=="deleted"),],pch=19,col="blue")
-points(AA85~AA87,data = q1[which(w1h1_2$flag=="deleted"),],pch=19,col="red")
-points(AA85~AA87,data = q1[which(w2h1_2$flag=="deleted"),],pch=19,col="turquoise")
-points(AA85~AA87,data = q1[which(h1tst),],pch=19,col="black",cex = 0.7)
-points(AA85~AA87,data = q1[which(w1tst),],pch=19,col="red",cex = 0.7)
-
-fun_plot(q1$AA87,q1$AA86,100,"height","weight (preg)")
-points(AA86~AA87,data = q1[which(bm1_2$flag=="deleted"),],pch=19,col="green",cex=1.2)
-points(AA86~AA87,data = q1[which(bm2_2$flag=="deleted"),],pch=3,col="black")
-points(AA86~AA87,data = q1[which(w1w2_2$flag=="deleted"),],pch=19,col="blue",cex=0.8)
-points(AA86~AA87,data = q1[which(w2h1_2$flag=="deleted"),],pch=19,col="red",cex = 0.6)
-points(AA86~AA87,data = q1[which(w1h1_2$flag=="deleted"),],pch=1,col="black",cex=2)
-points(AA86~AA87,data = q1[which(h1tst),],pch=19,col="black",cex = 0.7)
-points(AA86~AA87,data = q1[which(w2tst),],pch=19,col="red",cex = 0.7)
-
+############################################ 
 
 ###  create a table of all flags 
 out = data.frame(bm1_1=(bm1_1$flag=="deleted"),bm2_1=(bm2_1$flag=="deleted"),
                  w1w2_1=(w1w2_1$flag=="deleted"),w1h1_1=(w1h1_1$flag=="deleted"),
-                 w2h1_1=(w2h1_1$flag=="deleted"),
-                 bm1_2=(bm1_2$flag=="deleted"),bm2_2=(bm2_2$flag=="deleted"),
-                 w1w2_2=(w1w2_2$flag=="deleted"),w1h1_2=(w1h1_2$flag=="deleted"),
-                 w2h1_2=(w2h1_2$flag=="deleted"),
-                 h1 = h1tst, w1 = w1tst, w2 = w2tst, stringsAsFactors=F)
+                 w2h1_1=(w2h1_1$flag=="deleted"), stringsAsFactors=F)
 head(out); dim(out)
 
 # vectors that decide what should be deleted
 fun_sum = function(x) sum(x,na.rm=T)
-h1t = apply(out[,c(1,2,4,5, 6,7,9,10, 11)],1,fun_sum) # for height
-w1t = apply(out[,c(1,3,4,   6,8,9,    12)],1,fun_sum) # for prepreg weight
-w2t = apply(out[,c(2,3,5,   7,8,10,   13)],1,fun_sum) # for pregnancy weight
+h1t = apply(out[,c(1,2,4,5)],1,fun_sum) # for height
+w1t = apply(out[,c(1,3,4)],1,fun_sum) # for prepreg weight
+w2t = apply(out[,c(2,3,5)],1,fun_sum) # for pregnancy weight
 table(h1t); table(w1t); table(w2t)
 
 ###  delete what is selected for deletion
@@ -452,17 +486,24 @@ q1$AA85[which(w1t>0)]=NA
 q1$AA86[which(w2t>0)]=NA
 q1$AA87[which(h1t>0)]=NA
 
+### (note: multiparity-based outliers were already deleted earlier)
+
 # check how many are missing now
 sum(is.na(q1$AA85))
 sum(is.na(q1$AA86))
 sum(is.na(q1$AA87))
 
 # how many pregnancies have (and how many do not) a full set of data
+print("missing data:")
 sum( (is.na(q1$AA85))|(is.na(q1$AA87)))
+print("full data:")
 sum( (!is.na(q1$AA85))&(!is.na(q1$AA87)))
 
-
 # create a dataframe of flags describing what happened with each Pregnancy
+## 0 - original
+## 1 - corrected
+## 2 - imputed from other pregnancies
+## 3 - deleted
 flags = data.frame(PREG_ID=q1$PREG_ID,AA85=NA,AA86=NA,AA87=NA)
 for (col_name in c("AA85","AA86","AA87")) {
         changes = as.numeric(q1[,col_name] != q1_backup[,col_name])
@@ -470,8 +511,12 @@ for (col_name in c("AA85","AA86","AA87")) {
         deletions = (is.na(q1[,col_name]))&(!is.na(q1_backup[,col_name]))
         # table(changes); table(deletions)
         #since changes were done first and only then -  deletions :
-        changes[which(deletions)]=2
-        table(changes,useNA="a")
+        changes[which(deletions)]=3
+        imputeds=(mpflags[,col_name]=="imputed")
+        
+        # produce an error if a row was set as imputed, but not as a change
+        changes[imputeds & (changes!=1)]="ERROR"
+        changes[imputeds & (changes==1)]=2
         flags[,col_name] = changes
         rm(changes,deletions)
 }
@@ -489,26 +534,9 @@ new_names = paste("fl",ex_names,sep="")
 colnames(flags)[grep("^AA",colnames(flags))] = new_names
 head(flags)
 
-
 # create the object that will be saved
 output_obj = data.frame(q1,flags[,-grep("PREG_ID",colnames(flags))])
 head(output_obj)
 
-####################  for reproducibility reasons:
-# get the date stamp
-date_stamp = paste(unlist(strsplit(substr(Sys.time(),1,10),"-")),collapse="")
-# get the time stamp
-time_stamp = paste(unlist(strsplit(substr(Sys.time(),12,19),":")),collapse="")
-# get the hash of the current state of the Git folder
-hash = system(paste("git log --pretty=format:'%h' -n 1"),intern=TRUE)
-# generate the file name suffix
-suffix = paste(date_stamp,time_stamp,hash,sep="_")
-
-
-file_dir = "~/Biostuff/MOBA_1581_CLEANING/"
-file_name = paste(file_dir,"MOBA_PDB1581_CLEANED_maternalHgh1Wgh1Wgh2_",suffix,".txt",sep="")
+# write output
 write.table(output_obj,file_name,row.names=F,col.names=T,sep="\t",quote=F)
-
-
-
-
