@@ -36,7 +36,7 @@ head(mfr); dim(mfr)
 
 ## merge the age with mother info
 library(sqldf)
-M=sqldf("SELECT DISTINCT mfr.AGE, q1.* FROM q1 LEFT JOIN mfr ON mfr.PREG_ID=q1.PREG_ID")
+M=sqldf("SELECT DISTINCT mfr.AGE, mfr.PREG_ID, AA85, AA86, AA87, flAA85, flAA86, flAA87 FROM mfr LEFT JOIN q1 ON mfr.PREG_ID=q1.PREG_ID")
 head(M); dim(M)
 
 #####################################################################
