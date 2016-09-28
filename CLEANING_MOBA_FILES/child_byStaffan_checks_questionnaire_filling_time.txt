@@ -1,0 +1,69 @@
+setwd("D:")
+M<-read.table("child.txt",sep="\t",header=T,as.is=T)
+
+
+# Check that if not sent then not filled or returned
+sum(is.na(M$ALDERUTSENDT_S1))
+sum(is.na(M$ALDERUTSENDT_S2))
+sum(is.na(M$ALDERUTSENDT_S3)&!is.na(M$ALDERUTFYLT_S3))
+sum(is.na(M$ALDERUTSENDT_S3)&!is.na(M$ALDERRETUR_S3))
+sum(is.na(M$ALDERUTSENDT_S4)&!is.na(M$ALDERUTFYLT_S4))
+sum(is.na(M$ALDERUTSENDT_S4)&!is.na(M$ALDERRETUR_S4))
+sum(is.na(M$ALDERUTSENDT_S5)&!is.na(M$ALDERUTFYLT_S5))
+sum(is.na(M$ALDERUTSENDT_S5)&!is.na(M$ALDERRETUR_S5))
+sum(is.na(M$ALDERUTSENDT_S6)&!is.na(M$ALDERUTFYLT_S6))
+sum(is.na(M$ALDERUTSENDT_S6)&!is.na(M$ALDERRETUR_S6))
+
+
+
+timecheck<-function(x,y,z) {
+XnaY<-is.na(x)|is.na(y)
+YltX<-!XnaY & x>y
+
+XnaZ<-is.na(x)|is.na(z)
+ZltX<-!XnaZ & x>z
+
+YnaZ<-is.na(y)|is.na(z)
+ZltY<-!YnaZ & y>z
+
+naY<-!is.na(x)&is.na(y)
+
+list(YltX=YltX,ZltX=ZltX,ZltY=ZltY,naY=naY)
+}
+
+
+a<-timecheck(M$ALDERUTSENDT_S1,M$ALDERUTFYLT_S1,M$ALDERRETUR_S1)
+ss<-(a$YltX | a$ZltX | a$ZltY | a$naY)
+S1<-data.frame(M[ss,c(1,10,11,12)],YltX=a$YltX[ss],ZltX=a$ZltX[ss],ZltY=a$ZltY[ss],naY=a$naY[ss])
+
+
+a<-timecheck(M$ALDERUTSENDT_S2,M$ALDERUTFYLT_S2,M$ALDERRETUR_S2)
+ss<-(a$YltX | a$ZltX | a$ZltY | a$naY)
+S2<-data.frame(M[ss,c(1,13,14,15)],YltX=a$YltX[ss],ZltX=a$ZltX[ss],ZltY=a$ZltY[ss],naY=a$naY[ss])
+
+
+a<-timecheck(M$ALDERUTSENDT_S3,M$ALDERUTFYLT_S3,M$ALDERRETUR_S3)
+ss<-(a$YltX | a$ZltX | a$ZltY | a$naY)
+S3<-data.frame(M[ss,c(1,49,50,51)],YltX=a$YltX[ss],ZltX=a$ZltX[ss],ZltY=a$ZltY[ss],naY=a$naY[ss])
+
+
+a<-timecheck(M$ALDERUTSENDT_S4,M$ALDERUTFYLT_S4,M$ALDERRETUR_S4)
+ss<-(a$YltX | a$ZltX | a$ZltY | a$naY)
+S4<-data.frame(M[ss,c(1,25,26,27)],YltX=a$YltX[ss],ZltX=a$ZltX[ss],ZltY=a$ZltY[ss],naY=a$naY[ss])
+
+
+a<-timecheck(M$ALDERUTSENDT_S5,M$ALDERUTFYLT_S5,M$ALDERRETUR_S5)
+ss<-(a$YltX | a$ZltX | a$ZltY | a$naY)
+S5<-data.frame(M[ss,c(1,36,37,38)],YltX=a$YltX[ss],ZltX=a$ZltX[ss],ZltY=a$ZltY[ss],naY=a$naY[ss])
+
+a<-timecheck(M$ALDERUTSENDT_S6,M$ALDERUTFYLT_S6,M$ALDERRETUR_S6)
+ss<-(a$YltX | a$ZltX | a$ZltY | a$naY)
+S6<-data.frame(M[ss,c(1,45,46,47)],YltX=a$YltX[ss],ZltX=a$ZltX[ss],ZltY=a$ZltY[ss],naY=a$naY[ss])
+
+
+write.table(S1,"S1.txt",quote=F,na="",row.names=F,sep="\t")
+write.table(S2,"S2.txt",quote=F,na="",row.names=F,sep="\t")
+write.table(S3,"S3.txt",quote=F,na="",row.names=F,sep="\t")
+write.table(S4,"S4.txt",quote=F,na="",row.names=F,sep="\t")
+write.table(S5,"S5.txt",quote=F,na="",row.names=F,sep="\t")
+write.table(S5,"S6.txt",quote=F,na="",row.names=F,sep="\t")

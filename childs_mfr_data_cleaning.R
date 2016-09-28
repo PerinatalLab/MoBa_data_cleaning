@@ -1,5 +1,7 @@
 #!/usr/bin/Rscript
 
+# WARNING! this is a very quick-and-dirty way of cleaning mfr data
+
 #########  CLEAN DATA
 # clean weight values
 hist(dat$AA85,breaks=100,col="grey")
